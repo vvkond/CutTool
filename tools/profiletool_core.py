@@ -289,7 +289,12 @@ class ProfileToolCore(QWidget):
             else:
                 PlottingTool().attachWells(self.dockwidget, self.wellsOnProfile, self.dockwidget.mdl)
 
-            self.redrawLogs(self.dockwidget.currentTemplateId)
+            if len(self.wellsOnProfile) > 0:
+                self.redrawLogs(self.dockwidget.currentTemplateId)
+            else:
+                PlottingTool().clearLogLayer(self.dockwidget)
+                self.iface.messageBar().pushMessage(self.tr(u"Geology cut"), u'Скважины не найдены, убедитесь в правильности выбора проекта',
+                                                    level=QgsMessageBar.CRITICAL, duration=10)
 
     def redrawLogs(self, templateId):
         self.updateLogs(templateId)

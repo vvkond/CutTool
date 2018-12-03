@@ -109,6 +109,7 @@ class PTDockWidget(QDockWidget, FormClass):
         self.plotlibrary = None                            #The plotting library to use
         self.showcursor = True
         self.plotCanvas = None
+        self.currentProjectName = None
 
         #Временно
         self.cbxSaveAs.setVisible(False)
@@ -143,9 +144,20 @@ class PTDockWidget(QDockWidget, FormClass):
     #init things ****************************************************************
     #********************************************************************************
 
+    def isProjectChanged(self):
+        project = QtCore.QSettings().value('currentProject')
+        if project:
+            return self.currentProjectName != project['project']
+        else:
+            return False
+
     def fillTemplateList(self):
         dbReader = TemplatesDbReader(self.iface, self)
         templates = dbReader.readTemplates()
+
+        project = QtCore.QSettings().value('currentProject')
+        if project:
+            self.currentProjectName = project['project']
 
         self.wellTemplates.clear()
         self.wellTemplates.addItem(u'Не выбрано', -1)
@@ -388,6 +400,8 @@ class PTDockWidget(QDockWidget, FormClass):
 
     def on_mApplyPushButton_clicked(self):
         if not self.profiletoolcore.finishing:
+            if self.isProjectChanged():
+                self.fillTemplateList()
             self.refreshPlot()
             self.profiletoolcore.updateWells()
 
@@ -483,6 +497,8 @@ class PTDockWidget(QDockWidget, FormClass):
 
     def _onClick(self,index1):                    #action when clicking the tableview
         self.tableViewTool.onClick(self.iface, self, self.mdl, self.plotlibrary, index1)
+        self.iface.mapCanvas().refreshAllLayers()
+        self.plotCanvas.canvas.refreshAllLayers()
 
     def _onChange(self,item):
         if (not self.mdl.item(item.row(), COL_LAYER) is None

@@ -354,7 +354,8 @@ class PlottingTool:
             if color:
                 symbol.setColor(color)
 
-            category = QgsRendererCategoryV2(i, symbol, str(i))
+            nm = model1.item(i, COL_NAME).data(QtCore.Qt.EditRole)
+            category = QgsRendererCategoryV2(i, symbol, nm)
             categories.append(category)
 
         #Rule for frame
@@ -375,11 +376,13 @@ class PlottingTool:
             else:
                 symbol = ss.clone()
 
-            category = QgsRendererCategoryV2(i, symbol, str(i))
+            nm = model1.item(i, COL_NAME).data(QtCore.Qt.EditRole)
+            category = QgsRendererCategoryV2(i, symbol, nm)
             categories.append(category)
 
         renderer = QgsCategorizedSymbolRendererV2('ID', categories)
         polygonLayer.setRendererV2(renderer)
+
 
     def getOrCreateLayerGroup(self):
         root = QgsProject.instance().layerTreeRoot()
@@ -599,6 +602,11 @@ class PlottingTool:
 
         self.updateDecorations(wdg)
 
+    def clearLogLayer(self, wdg):
+        lineLayer = self.getOrCreateCutLayer(wdg, PlottingTool.LogLineLayerName, PlottingTool.LogLineLayerDef, 0)
+        with edit(lineLayer):
+            for feat in lineLayer.getFeatures():
+                lineLayer.deleteFeature(feat.id())
 
     def attachLogs(self, wdg, logsOnWells, model1, xyAspect):
         lineLayer = self.getOrCreateCutLayer(wdg, PlottingTool.LogLineLayerName, PlottingTool.LogLineLayerDef, 0)
@@ -813,31 +821,6 @@ class PlottingTool:
         polygonLayer = self.getPolygonLayer()
         if polygonLayer:
             self.createPolygonStyle(polygonLayer, model1)
-
-        if library == "PyQtGraph":
-            pitems = wdg.plotWdg.getPlotItem()
-            for i, item in enumerate(pitems.items):
-                if type(item) is CutFillBetweenItem and item.name == name:
-                    item.setStyleSymbol( symbol )
-
-        if library == "Qwt5":
-            temp1 = wdg.plotWdg.itemList()
-            for i in range(len(temp1)):
-                if name == str(temp1[i].title().text()):
-                    curve = temp1[i]
-                    curve.setPen(QPen(color1, 3))
-                    wdg.plotWdg.replot()
-                    # break  # Don't break as there may be multiple curves with a common name (segments separated with None values)
-
-        if library == "Matplotlib":
-            temp1 = wdg.plotWdg.figure.get_axes()[0].get_lines()
-            for i in range(len(temp1)):
-                if name == str(temp1[i].get_gid()):
-                    temp1[i].set_color((color1.red() / 255.0 , color1.green() / 255.0 , color1.blue() / 255.0 ,  color1.alpha() / 255.0 ))
-                    wdg.plotWdg.figure.get_axes()[0].redraw_in_frame()
-                    wdg.plotWdg.figure.canvas.draw()
-                    wdg.plotWdg.draw()
-                    break
 
 
     def changeAttachCurve(self, wdg, library, bool, name):                #Action when clicking the tableview - checkstate
