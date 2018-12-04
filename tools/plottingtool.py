@@ -264,7 +264,7 @@ class PlottingTool:
                             if len(polygon):
                                 f = QgsFeature(fields)
                                 f.setGeometry(QgsGeometry.fromPolygon([polygon]))
-                                f.setAttribute('ID', id)
+                                f.setAttribute('ID', id-1)
                                 polygonLayer.addFeatures([f])
 
 
@@ -369,7 +369,7 @@ class PlottingTool:
 
     def createPolygonStyle(self, polygonLayer, model1):
         categories = []
-        for i in range(1, model1.rowCount()):
+        for i in range(0, model1.rowCount()-1):
             ss = model1.item(i, COL_BACKGROUND).data(QtCore.Qt.UserRole)
             if not ss:
                 symbol = QgsSymbolV2.defaultSymbol(polygonLayer.geometryType())
