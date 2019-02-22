@@ -66,7 +66,7 @@ class TemplatesDbReader(DbReaderBase):
         #1428716544 - fixed
         tracks = []
         # try:
-        # strToParce = lobObject.read()
+
         doc = QtXml.QDomDocument()
         if doc.setContent(strToParce):
             # print doc.toString()
@@ -139,6 +139,25 @@ class TemplatesDbReader(DbReaderBase):
 
                         if len(traces):
                             track['traces'] = traces
+
+                    #Zonations
+                    zons = item.elementsByTagName('GPT_ZON')
+                    if zons:
+                        zonations = []
+                        for ii in xrange(zons.count()):
+                            zn = zons.at(ii).toElement()
+                            zone = {}
+                            if zn.hasAttribute('Type'):
+                                zone['Type'] = zn.attribute('Type')
+                            if zn.hasAttribute('Name'):
+                                zone['Name'] = zn.attribute('Name')
+                            if zn.hasAttribute('ZonSLD'):
+                                zone['ZonSLD'] = zn.attribute('ZonSLD')
+
+                            zonations.append(zone)
+
+                        if len(zonations):
+                            track['zonations'] = zonations
 
                     tracks.append(track)
 

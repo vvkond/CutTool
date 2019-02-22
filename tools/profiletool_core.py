@@ -53,6 +53,7 @@ from .utils import *
 from ..dbtools.wellsDbReader import *
 from ..dbtools.templatesDbReader import *
 from ..dbtools.traceDbReader import *
+from ..dbtools.zoneDbReader import *
 from ..dbtools.mesh import *
 import os
 
@@ -315,6 +316,7 @@ class ProfileToolCore(QWidget):
             return False
 
         logReader = TracesDbReader(self.iface)
+        zoneReader = ZoneDbReader(self.iface)
         aspect = 1.0  # / self.dockwidget.mXyAspectRatio.value()
 
         topDepthLimit = self.dockwidget.wellTopDepth
@@ -444,6 +446,13 @@ class ProfileToolCore(QWidget):
                         scaledTrackTraces.append(('track', [borderOnCut], 3, headerOffset, -1, 0, 0))
 
                     wellLogTraces.append(scaledTrackTraces)
+
+                if 'zonations' in track:
+                    zonations = track['zonations']
+                    for zone in zonations:
+                        zonationId = zone['ZonSLD']
+                        zoneReader.readZone(wellId, zonationId, None)
+
 
             if len(wellLogTraces):
                 self.logsOnWells.append((wellId, wellLogTraces))

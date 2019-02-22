@@ -4,7 +4,7 @@ import struct
 
 #from pyproj import Proj
 
-from QgisPDS.utils import StrictInit, cached_property
+from utils import StrictInit, cached_property
 
 
 '''
