@@ -15,6 +15,10 @@ from .dbReaderBase import *
 
 class TemplatesDbReader(DbReaderBase):
 
+    ZONATION_LATEST = 3000
+    ZONATION_MATCH = 3001
+    ZONATION_SELECT_WHEN_LOADING = 3003
+
     def __init__(self, iface, parent = None):
         DbReaderBase.__init__(self, iface, parent)
 
@@ -152,7 +156,16 @@ class TemplatesDbReader(DbReaderBase):
                             if zn.hasAttribute('Name'):
                                 zone['Name'] = zn.attribute('Name')
                             if zn.hasAttribute('ZonSLD'):
-                                zone['ZonSLD'] = zn.attribute('ZonSLD')
+                                zone['ZonSLD'] = int(zn.attribute('ZonSLD'))
+                            if zn.hasAttribute('SelectMode'):
+                                sm = int(zn.attribute('SelectMode'))
+                                zone['SelectMode'] = sm
+                                if sm == TemplatesDbReader.ZONATION_SELECT_WHEN_LOADING \
+                                        or sm == TemplatesDbReader.ZONATION_MATCH:
+                                    #Select when loading or Match pattern
+                                    zone['ZonSLD'] = 0
+                            if zn.hasAttribute('DescPattern'):
+                                zone['DescPattern'] = zn.attribute('DescPattern')
 
                             zonations.append(zone)
 

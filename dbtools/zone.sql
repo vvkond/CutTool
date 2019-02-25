@@ -16,4 +16,4 @@ WHERE
     AND vi.TIG_INTERVAL_SLDNID = i.DB_SLDNID
     AND i.TIG_ZONATION_SLDNID = z.DB_SLDNID
     AND(z.DB_SLDNID = :zonation_id OR :zonation_id IS NULL)
-    AND(i.DB_SLDNID = :zone_id OR :zone_id IS NULL)
+    --AND(i.DB_SLDNID = :zone_id OR :zone_id IS NULL)

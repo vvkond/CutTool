@@ -360,11 +360,11 @@ class ProfileToolCore(QWidget):
                 if 'width' in track and not isDefaultWidth:
                     trackWidth = track['width'] / 10.0
 
+                scaledTrackTraces = []
                 if 'traces' in track:
                     trackTraces = track['traces']
                     trackStart = len(mesh)
                     trackEnd = 0
-                    scaledTrackTraces = []
                     for trace in trackTraces:
                         traceType = trace['type']
                         traceColor = 3
@@ -436,22 +436,37 @@ class ProfileToolCore(QWidget):
                             scaledTrackTraces.append((traceName, scaledTraceParts, traceColor, headerOffset,
                                                       trackWidth, realMinValue, realMaxValue))
 
-                    trackOffset += trackWidth / sumTrackWidth
-                    headerOffset += trackWidth
+                trackOffset += trackWidth / sumTrackWidth
+                headerOffset += trackWidth
 
-                    # Add track border
-                    borderMd = [(m[2], trackOffset) for m in wellTrajectory]
-                    borderOnCut, start, end = TrajectoryMesh().curveAlongCurve(mesh, borderMd, aspect)
-                    if len(borderOnCut):
-                        scaledTrackTraces.append(('track', [borderOnCut], 3, headerOffset, -1, 0, 0))
+                # Add track border
+                borderMd = [(m[2], trackOffset) for m in wellTrajectory]
+                borderOnCut, start, end = TrajectoryMesh().curveAlongCurve(mesh, borderMd, aspect)
+                if len(borderOnCut):
+                    scaledTrackTraces.append(('track', [borderOnCut], 3, headerOffset, -1, 0, 0))
 
-                    wellLogTraces.append(scaledTrackTraces)
+                wellLogTraces.append(scaledTrackTraces)
 
                 if 'zonations' in track:
                     zonations = track['zonations']
                     for zone in zonations:
                         zonationId = zone['ZonSLD']
-                        zoneReader.readZone(wellId, zonationId, None)
+                        selectMode = zone['SelectMode']
+                        if selectMode == TemplatesDbReader.ZONATION_LATEST: #Latest
+                            #print 'latest'
+                            zonationId = zoneReader.readZonationLatestForWell(wellId)
+                        elif selectMode == TemplatesDbReader.ZONATION_MATCH: #Match description pattern
+                            #print 'Match'
+                            if zonationId == 0:
+                                zonationId = zoneReader.readZonationByDesc(zone['DescPattern'])
+                                zone['ZonSLD'] = zonationId
+                        elif selectMode == TemplatesDbReader.ZONATION_SELECT_WHEN_LOADING: #Select when loading
+                            #print 'Select on loading'
+                            if zonationId == 0:
+                                #TODO: 'Select on loading'
+                                #zonationId = ...
+                                zone['ZonSLD'] = zonationId
+                        zones = zoneReader.readZone(wellId, zonationId)
 
 
             if len(wellLogTraces):
