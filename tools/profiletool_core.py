@@ -81,6 +81,7 @@ class ProfileToolCore(QWidget):
         self.pointstoDraw = []
         self.wellsOnProfile = []
         self.logsOnWells = []
+        self.zonesOnWells = []
         # he renderer for temporary polyline
         # self.toolrenderer = ProfiletoolMapToolRenderer(self)
         self.toolrenderer = None
@@ -299,11 +300,16 @@ class ProfileToolCore(QWidget):
 
     def redrawLogs(self, templateId):
         self.updateLogs(templateId)
-        PlottingTool().attachLogs(self.dockwidget, self.logsOnWells, self.dockwidget.mdl,
+        pt = PlottingTool()
+        pt.attachLogs(self.dockwidget, self.logsOnWells, self.dockwidget.mdl,
                                   self.dockwidget.mXyAspectRatio.value())
+        pt.attachZones(self.dockwidget, self.zonesOnWells, self.dockwidget.mdl,
+                                  self.dockwidget.mXyAspectRatio.value())
+
 
     def updateLogs(self, templateId):
         self.logsOnWells = []
+        self.zonesOnWells = []
         if templateId < 0:
             return False
 
@@ -351,6 +357,7 @@ class ProfileToolCore(QWidget):
                 sumTrackWidth += trackWidth
 
             wellLogTraces = []
+            wellZones = []
             mesh = TrajectoryMesh().create(wellTrajectory, sumTrackWidth, 10)
 
             trackOffset = 0
@@ -360,7 +367,10 @@ class ProfileToolCore(QWidget):
                 if 'width' in track and not isDefaultWidth:
                     trackWidth = track['width'] / 10.0
 
+                needBorder = False
+
                 scaledTrackTraces = []
+                scaledTrackZones = []
                 if 'traces' in track:
                     trackTraces = track['traces']
                     trackStart = len(mesh)
@@ -435,17 +445,7 @@ class ProfileToolCore(QWidget):
                         if len(scaledTraceParts):
                             scaledTrackTraces.append((traceName, scaledTraceParts, traceColor, headerOffset,
                                                       trackWidth, realMinValue, realMaxValue))
-
-                trackOffset += trackWidth / sumTrackWidth
-                headerOffset += trackWidth
-
-                # Add track border
-                borderMd = [(m[2], trackOffset) for m in wellTrajectory]
-                borderOnCut, start, end = TrajectoryMesh().curveAlongCurve(mesh, borderMd, aspect)
-                if len(borderOnCut):
-                    scaledTrackTraces.append(('track', [borderOnCut], 3, headerOffset, -1, 0, 0))
-
-                wellLogTraces.append(scaledTrackTraces)
+                            needBorder = True
 
                 if 'zonations' in track:
                     zonations = track['zonations']
@@ -453,24 +453,48 @@ class ProfileToolCore(QWidget):
                         zonationId = zone['ZonSLD']
                         selectMode = zone['SelectMode']
                         if selectMode == TemplatesDbReader.ZONATION_LATEST: #Latest
-                            #print 'latest'
                             zonationId = zoneReader.readZonationLatestForWell(wellId)
                         elif selectMode == TemplatesDbReader.ZONATION_MATCH: #Match description pattern
-                            #print 'Match'
                             if zonationId == 0:
                                 zonationId = zoneReader.readZonationByDesc(zone['DescPattern'])
                                 zone['ZonSLD'] = zonationId
                         elif selectMode == TemplatesDbReader.ZONATION_SELECT_WHEN_LOADING: #Select when loading
-                            #print 'Select on loading'
                             if zonationId == 0:
                                 #TODO: 'Select on loading'
                                 #zonationId = ...
                                 zone['ZonSLD'] = zonationId
                         zones = zoneReader.readZone(wellId, zonationId)
+                        for z in zones:
+                            rightBorderMd = [(m[2], trackOffset) for m in wellTrajectory if m[2] >= z[1] and m[2] <= z[2]]
+                            if len(rightBorderMd):
+                                rightBorderMd.insert(0, (z[1], trackOffset))
+                                rightBorderMd.append((z[2], trackOffset))
+                                ww = trackOffset + trackWidth / sumTrackWidth
+                                leftBorderMd = [(m[0], ww) for m in rightBorderMd]
+                                leftBorderOnCut, start, end = TrajectoryMesh().curveAlongCurve(mesh, leftBorderMd, aspect)
+                                rightBorderOnCut, start, end = TrajectoryMesh().curveAlongCurve(mesh, rightBorderMd, aspect)
+                                for m in reversed(rightBorderOnCut):
+                                    leftBorderOnCut.append(m)
+                                wellZones.append((z[0], leftBorderOnCut))
+                                needBorder = True
+
+                if needBorder:
+                    trackOffset += trackWidth / sumTrackWidth
+                    headerOffset += trackWidth
+
+                    # Add track border
+                    borderMd = [(m[2], trackOffset) for m in wellTrajectory]
+                    borderOnCut, start, end = TrajectoryMesh().curveAlongCurve(mesh, borderMd, aspect)
+                    if len(borderOnCut):
+                        scaledTrackTraces.append(('track', [borderOnCut], 3, headerOffset, -1, 0, 0))
+
+                    wellLogTraces.append(scaledTrackTraces)
 
 
             if len(wellLogTraces):
                 self.logsOnWells.append((wellId, wellLogTraces))
+            if len(wellZones):
+                self.zonesOnWells.append((wellId, wellZones))
 
         return True
 
@@ -535,6 +559,7 @@ class ProfileToolCore(QWidget):
         self.finishing = True
         # self.clearProfil()
         if self.toolrenderer:
+            self.dockwidget.plotCanvas.cleaning()
             self.toolrenderer.cleaning()
 
     # ******************************************************************************************

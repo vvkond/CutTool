@@ -59,54 +59,6 @@ class MirrorMap(QWidget):
         gridLayout.addWidget( self.canvas, 0, 0, 1, 7 )
 
 
-        # self.addLayerBtn = QToolButton(self)
-        # self.addLayerBtn.setToolTip("Add current layer or group")
-        # self.addLayerBtn.setIcon( QIcon(":/plugins/DockableMirrorMap/icons/plus.png") )
-        # QObject.connect(self.addLayerBtn, SIGNAL( "clicked()" ), self.addLayer)
-        # gridLayout.addWidget( self.addLayerBtn, 1, 0, 1, 1 )
-        # self.addLayerBtn.setAutoRaise(True)
-        #
-        # self.delLayerBtn = QToolButton(self)
-        # self.delLayerBtn.setToolTip("Remove current layer or group")
-        # self.delLayerBtn.setIcon( QIcon(":/plugins/DockableMirrorMap/icons/minus.png") )
-        # QObject.connect(self.delLayerBtn, SIGNAL( "clicked()" ), self.delLayer)
-        # gridLayout.addWidget( self.delLayerBtn, 1, 1, 1, 1 )
-        # self.delLayerBtn.setAutoRaise(True)
-
-        # self.styleMenu = QMenu(self)
-        # self.styleBtn = QPushButton("Layer Style", self)
-        # self.styleBtn.setMenu(self.styleMenu)
-        # self.styleBtn.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
-        # gridLayout.addWidget(self.styleBtn, 1, 2, 1, 1)
-        # if QGis.QGIS_VERSION_INT < 21100:
-        #     self.styleBtn.hide()
-
-        # self.renderCheck = QCheckBox( "Render", self )
-        # QObject.connect(self.renderCheck, SIGNAL( "toggled(bool)" ), self.toggleRender)
-        # self.renderCheck.setChecked(True)
-        # gridLayout.addWidget( self.renderCheck, 1, 3, 1, 1 )
-
-        # self.scaleFactorLabel = QLabel(self)
-        # self.scaleFactorLabel.setText("Scale factor:")
-        # self.scaleFactorLabel.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        # gridLayout.addWidget(self.scaleFactorLabel, 1, 4, 1, 1)
-        # self.scaleFactor = QDoubleSpinBox(self)
-        # self.scaleFactor.setMinimum(0.0)
-        # self.scaleFactor.setMaximum(1000.0)
-        # self.scaleFactor.setDecimals(3)
-        # self.scaleFactor.setValue(1)
-        # self.scaleFactor.setObjectName("scaleFactor")
-        # self.scaleFactor.setSingleStep(.05)
-        # gridLayout.addWidget(self.scaleFactor, 1, 5, 1, 1)
-        # self.scaleFactor.valueChanged.connect(self.onExtentsChanged)
-
-        # self.editLabelBtn = QToolButton(self)
-        # self.editLabelBtn.setToolTip("Edit map label")
-        # self.editLabelBtn.setIcon( QgsApplication.getThemeIcon("mActionOptions.svg") )
-        # QObject.connect(self.editLabelBtn, SIGNAL( "clicked()" ), self.editLabel)
-        # gridLayout.addWidget( self.editLabelBtn, 1, 6, 1, 1 )
-        # self.editLabelBtn.setAutoRaise(True)
-
         # Add a default pan tool
         self.toolPan = QgsMapToolPan( self.canvas )
         self.canvas.setMapTool( self.toolPan )
@@ -130,6 +82,8 @@ class MirrorMap(QWidget):
     def toggleRender(self, enabled):
         self.canvas.setRenderFlag( enabled )
 
+    def cleaning(self):
+        QObject.disconnect(QgsMapLayerRegistry.instance(), SIGNAL("layerWillBeRemoved(QString)"), self.delLayer)
 
     def onExtentsChanged(self):
         # self.canvas.setExtent( self.iface.mapCanvas().extent() )

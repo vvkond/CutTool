@@ -59,7 +59,7 @@ class ZoneDbReader(DbReaderBase):
 
         zones = []
         for row in rows:
-            print row[0], row[1], row[2]
+            # print row[0], row[1], row[2]
             if row[3] and row[4]:
                 zones.append((row[1]+'/'+row[2], row[3], row[4]))
 

@@ -83,6 +83,9 @@ class PlottingTool:
     LogLineLayerDef = u"Linestring?crs=epsg:4326&field=ID:integer&field=well_id:integer&field=name:string&field=header:string"
     LabelsLayerName = u'_cutLabels'
     LabelsLayerDef = u"point?crs=epsg:4326&field=name:string&field=angle:double&field=kind:integer"
+    ZoneLayerName = u'_cutZones'
+    ZoneLayerDef = u"Polygon?crs=epsg:4326&field=ID:integer&field=well_id:integer&field=name:string&field=header:string"
+
     LayerGroupName = u'Разрез'
 
     """This class manages profile plotting.
@@ -532,6 +535,10 @@ class PlottingTool:
         if pointLayer:
             wdg.plotCanvas.addNewLayer(pointLayer.id(), True)
 
+        polyLayer = self.getOrCreateCutLayer(wdg, PlottingTool.ZoneLayerName, PlottingTool.ZoneLayerDef, 1)
+        if polyLayer:
+            wdg.plotCanvas.addNewLayer(polyLayer.id())
+
 
     def attachCurves(self, wdg, profiles, model1, library, xyAspect):
 
@@ -675,6 +682,33 @@ class PlottingTool:
 
         wdg.plotCanvas.addNewLayer(lineLayer.id(), True)
 
+    def attachZones(self, wdg, zoneOnWells, model1, xyAspect):
+        polyLayer = self.getOrCreateCutLayer(wdg, PlottingTool.ZoneLayerName, PlottingTool.ZoneLayerDef, 1)
+
+        aspect = 1.0 / xyAspect
+        extent = wdg.plotCanvas.getExtent()
+        topY = extent.yMaximum()
+
+        with edit(polyLayer):
+            for feat in polyLayer.getFeatures():
+                polyLayer.deleteFeature(feat.id())
+
+            fields = polyLayer.fields()
+            for p in zoneOnWells:
+                wellId = p[0]
+                intervals = p[1]
+                for inter in intervals:
+                    name = inter[0]
+                    points = inter[1]
+                    polyline = [QgsPoint(pt[0], pt[1] * -1.0) for pt in points]
+                    f = QgsFeature(fields)
+                    f.setGeometry(QgsGeometry.fromPolygon([polyline]))
+                    f.setAttribute('well_id', wellId)
+                    f.setAttribute('name', name)
+                    polyLayer.addFeatures([f])
+
+        polyLayer.removeSelection()
+        wdg.plotCanvas.addNewLayer(polyLayer.id())
 
     def findMin(self, values):
         minVal = min( z for z in values if z is not None )
