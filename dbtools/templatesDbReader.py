@@ -156,14 +156,14 @@ class TemplatesDbReader(DbReaderBase):
                             if zn.hasAttribute('Name'):
                                 zone['Name'] = zn.attribute('Name')
                             if zn.hasAttribute('ZonSLD'):
-                                zone['ZonSLD'] = int(zn.attribute('ZonSLD'))
+                                zone['ZonSLD'] = [int(zn.attribute('ZonSLD'))]
                             if zn.hasAttribute('SelectMode'):
                                 sm = int(zn.attribute('SelectMode'))
                                 zone['SelectMode'] = sm
                                 if sm == TemplatesDbReader.ZONATION_SELECT_WHEN_LOADING \
                                         or sm == TemplatesDbReader.ZONATION_MATCH:
                                     #Select when loading or Match pattern
-                                    zone['ZonSLD'] = 0
+                                    zone['ZonSLD'] = []
                             if zn.hasAttribute('DescPattern'):
                                 zone['DescPattern'] = zn.attribute('DescPattern')
 

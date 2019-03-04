@@ -4,7 +4,8 @@ SELECT
     TRIM(i.TIG_INTERVAL_NAME) AS "zone_name",
     vi.TIG_TOP_POINT_DEPTH AS "top_depth",
     vi.TIG_BOT_POINT_DEPTH AS "bottom_depth",
-    wh.DB_SLDNID AS "well_id"
+    wh.DB_SLDNID AS "well_id",
+    i.tig_background_colour
 FROM
     tig_well_interval vi,
     tig_well_history wh,

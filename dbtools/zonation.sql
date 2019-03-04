@@ -1,4 +1,4 @@
-SELECT
+SELECT distinct
     z.DB_SLDNID,
     trim(z.TIG_DESCRIPTION) AS "zonation_name"
 FROM

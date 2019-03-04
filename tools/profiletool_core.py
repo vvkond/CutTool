@@ -28,9 +28,9 @@
 from qgis.PyQt import uic, QtCore, QtGui, QtXml
 
 try:
-    from qgis.PyQt.QtGui import QWidget
+    from qgis.PyQt.QtGui import QWidget, QInputDialog
 except:
-    from qgis.PyQt.QtWidgets import QWidget
+    from qgis.PyQt.QtWidgets import QWidget, QInputDialog
 from qgis.PyQt.QtSvg import *  # required in some distros
 # qgis import
 import qgis
@@ -48,6 +48,7 @@ from .dataReaderTool import DataReaderTool
 from .plottingtool import PlottingTool
 from .ptmaptool import ProfiletoolMapTool, ProfiletoolMapToolRenderer
 from ..ui.ptdockwidget import PTDockWidget
+from ..ui.dlgZonationList import *
 from . import profilers
 from .utils import *
 from ..dbtools.wellsDbReader import *
@@ -341,6 +342,8 @@ class ProfileToolCore(QWidget):
         except Exception as e:
             QgsMessageLog.logMessage(u"Curve colors read error: {0}".format(str(e)), tag="CutPlugin")
 
+        wellFilter = ','.join(str(p[1]) for p in self.wellsOnProfile)
+
         for p in self.wellsOnProfile:
             wellId = p[1]
             wellTrajectory = p[2]
@@ -362,7 +365,13 @@ class ProfileToolCore(QWidget):
 
             trackOffset = 0
             headerOffset = wellTrajectory[0][0]
+            trackIndex = 1
             for track in tracks:
+                trackName = str(trackIndex)
+                trackIndex+=1
+                if 'name' in track:
+                    trackName = track['name']
+
                 trackWidth = float(defTrackWidth)  # m
                 if 'width' in track and not isDefaultWidth:
                     trackWidth = track['width'] / 10.0
@@ -455,14 +464,17 @@ class ProfileToolCore(QWidget):
                         if selectMode == TemplatesDbReader.ZONATION_LATEST: #Latest
                             zonationId = zoneReader.readZonationLatestForWell(wellId)
                         elif selectMode == TemplatesDbReader.ZONATION_MATCH: #Match description pattern
-                            if zonationId == 0:
+                            if len(zonationId) == 0:
                                 zonationId = zoneReader.readZonationByDesc(zone['DescPattern'])
                                 zone['ZonSLD'] = zonationId
                         elif selectMode == TemplatesDbReader.ZONATION_SELECT_WHEN_LOADING: #Select when loading
-                            if zonationId == 0:
-                                #TODO: 'Select on loading'
-                                #zonationId = ...
+                            if len(zonationId) == 0:
+                                zonations = zoneReader.readZonationList(wellFilter)
+                                dlg = DlgZonationList(zonations, self.tr('Select zonations for Template track ')+trackName, self)
+                                if dlg.exec_():
+                                    zonationId = dlg.selectedZonations()
                                 zone['ZonSLD'] = zonationId
+
                         zones = zoneReader.readZone(wellId, zonationId)
                         for z in zones:
                             rightBorderMd = [(m[2], trackOffset) for m in wellTrajectory if m[2] >= z[1] and m[2] <= z[2]]
@@ -475,7 +487,7 @@ class ProfileToolCore(QWidget):
                                 rightBorderOnCut, start, end = TrajectoryMesh().curveAlongCurve(mesh, rightBorderMd, aspect)
                                 for m in reversed(rightBorderOnCut):
                                     leftBorderOnCut.append(m)
-                                wellZones.append((z[0], leftBorderOnCut))
+                                wellZones.append((z[0], z[3], leftBorderOnCut))
                                 needBorder = True
 
                 if needBorder:

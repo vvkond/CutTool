@@ -104,6 +104,7 @@ class PlottingTool:
         self.styleForLayer[PlottingTool.LabelsLayerName] = plugin_dir + '/../styles/cutlabels.qml'
         self.styleForLayer[PlottingTool.WellsLayerName] = plugin_dir + '/../styles/wellLines.qml'
         self.styleForLayer[PlottingTool.LogLineLayerName] = plugin_dir + '/../styles/logLines.qml'
+        self.styleForLayer[PlottingTool.ZoneLayerName] = plugin_dir + '/../styles/zones.qml'
 
         self.colorRamp = {}
         self.colorRamp[3] = QColor(Qt.black)
@@ -694,12 +695,15 @@ class PlottingTool:
                 polyLayer.deleteFeature(feat.id())
 
             fields = polyLayer.fields()
+            zoneColors = {}
             for p in zoneOnWells:
                 wellId = p[0]
                 intervals = p[1]
                 for inter in intervals:
                     name = inter[0]
-                    points = inter[1]
+                    zoneColor = inter[1]
+                    points = inter[2]
+                    zoneColors[name] = zoneColor
                     polyline = [QgsPoint(pt[0], pt[1] * -1.0) for pt in points]
                     f = QgsFeature(fields)
                     f.setGeometry(QgsGeometry.fromPolygon([polyline]))
@@ -708,6 +712,22 @@ class PlottingTool:
                     polyLayer.addFeatures([f])
 
         polyLayer.removeSelection()
+
+        categories = []
+        for key in zoneColors.keys():
+            symbol = QgsSymbolV2.defaultSymbol(polyLayer.geometryType())
+            colorIndex = int(zoneColors[key])
+            if colorIndex in self.colorRamp:
+                symbol.setColor(self.colorRamp[colorIndex])
+            else:
+                symbol.setColor(QColor(int(colorIndex)))
+
+            category = QgsRendererCategoryV2(str(key), symbol, str(key))
+            categories.append(category)
+
+        renderer = QgsCategorizedSymbolRendererV2('name', categories)
+        polyLayer.setRendererV2(renderer)
+
         wdg.plotCanvas.addNewLayer(polyLayer.id())
 
     def findMin(self, values):
