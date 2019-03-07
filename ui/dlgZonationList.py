@@ -19,7 +19,7 @@ class DlgZonationList(QtGui.QDialog, FORM_CLASS):
 
         for z in zonations:
             item = QtGui.QListWidgetItem(z[1], self.listWidget)
-            item.setData(z[0], QtCore.Qt.UserRole)
+            item.setData(QtCore.Qt.UserRole, z[0])
             self.listWidget.addItem(item)
 
     def selectedZonations(self):

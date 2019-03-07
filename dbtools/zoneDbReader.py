@@ -67,7 +67,7 @@ class ZoneDbReader(DbReaderBase):
         if not self.initDb() or not zonationId:
             return []
 
-        print 'to read', zonationId
+        # print 'to read', zonationId
 
         zones = []
         for z in zonationId:
