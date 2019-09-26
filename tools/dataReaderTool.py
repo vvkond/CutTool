@@ -30,7 +30,7 @@ import numpy as np
 import platform
 from math import sqrt
 from .utils import isProfilable
-
+from ..dbtools.modelDbReader import *
 
 class DataReaderTool:
 
@@ -269,7 +269,9 @@ class DataReaderTool:
 
         return profile, buffergeom, multipoly
 
-
+    def simModelReaderTool(self, iface, wdg, pointstoDraw):
+        modelReader = ModelDbReader(iface)
+        modelReader.readModel(wdg.currentModelNumber)
 
 
     def removeDuplicateLenght(self,projectedpoints):

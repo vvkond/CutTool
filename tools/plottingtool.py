@@ -216,7 +216,7 @@ class PlottingTool:
 
 
 
-    def drawVertLine(self,wdg, pointstoDraw, library):
+    def drawVertLine(self, wdg, pointstoDraw, library):
         if library == "PyQtGraph":
             pass
 
@@ -285,9 +285,6 @@ class PlottingTool:
         return None
 
     def profilesToLayer(self, wdg, profiles, xyAspect):
-        if len(profiles) < 1:
-            return
-
         lineLayer = self.getOrCreateCutLayer(wdg, PlottingTool.PolylineLayerName, PlottingTool.PolylineLayerDef)
         polygonLayer = self.getOrCreateCutLayer(wdg, PlottingTool.PolygonLayerName, PlottingTool.PolygonLayerDef)
 
@@ -298,6 +295,9 @@ class PlottingTool:
         with edit(polygonLayer):
             for feat in polygonLayer.getFeatures():
                 polygonLayer.deleteFeature(feat.id())
+
+        if profiles is None or len(profiles) < 1:
+            return None, None
 
         aspect = 1.0 / xyAspect
 
@@ -543,17 +543,16 @@ class PlottingTool:
 
     def attachCurves(self, wdg, profiles, model1, library, xyAspect):
 
-        if len(profiles) > 0:
-            lineLayer, polygonLayer = self.profilesToLayer(wdg, profiles, xyAspect)
-            if lineLayer:
-                wdg.plotCanvas.addNewLayer(lineLayer.id())
-                self.createPolylineStyle(lineLayer, model1)
+        lineLayer, polygonLayer = self.profilesToLayer(wdg, profiles, xyAspect)
+        if lineLayer:
+            wdg.plotCanvas.addNewLayer(lineLayer.id())
+            self.createPolylineStyle(lineLayer, model1)
 
-            if polygonLayer:
-                wdg.plotCanvas.addNewLayer(polygonLayer.id())
-                self.createPolygonStyle(polygonLayer, model1)
+        if polygonLayer:
+            wdg.plotCanvas.addNewLayer(polygonLayer.id())
+            self.createPolygonStyle(polygonLayer, model1)
 
-            self.updateDecorations(wdg, lineLayer)
+        self.updateDecorations(wdg, lineLayer)
 
 
     def attachWells(self, wdg, profiles, model1):

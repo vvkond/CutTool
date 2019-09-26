@@ -42,6 +42,7 @@ from ..tools.tableviewtool import TableViewTool
 from ..tools.utils import *
 from ..cutCanvas import *
 from ..dbtools.templatesDbReader import *
+from ..dbtools.modelDbReader import *
 
 try:
     from PyQt4.Qwt5 import *
@@ -135,6 +136,7 @@ class PTDockWidget(QDockWidget, FormClass):
         self.profileInterpolationCheckBox.stateChanged.connect(self.refreshPlot)
 
         self.fillTemplateList()
+        self.fillModelList()
 
         # self.wellLayerComboBox = QgsMapLayerComboBox(self.groupBox)
         # self.wellLayerComboBox.setFilters(QgsMapLayerProxyModel.Filters(8)) #Line layers only
@@ -164,6 +166,15 @@ class PTDockWidget(QDockWidget, FormClass):
 
         for t in templates:
             self.wellTemplates.addItem(t['description'], t['sldnid'])
+
+    def fillModelList(self):
+        dbReader = ModelDbReader(self.iface, self)
+        modelList = dbReader.readModelList()
+        self.mModelListWidget.clear()
+        for model in modelList:
+            item = QtGui.QListWidgetItem(model[1])
+            item.setData(Qt.UserRole, model[0])
+            self.mModelListWidget.addItem(item)
 
     def addOptionComboboxItems(self):
         self.cboLibrary.addItem("PyQtGraph")
@@ -317,6 +328,16 @@ class PTDockWidget(QDockWidget, FormClass):
     @trackWidth.setter
     def trackWidth(self, newWidth):
         self.trackWidthSpinBox.setValue(newWidth)
+
+    @property
+    def showModel(self):
+        return self.mShowModel.isChecked()
+
+    @property
+    def currentModelNumber(self):
+        if self.mModelListWidget.currentItem() is not None:
+            return self.mModelListWidget.currentItem().data(Qt.UserRole)
+        return -1
 
 
     #********************************************************************************

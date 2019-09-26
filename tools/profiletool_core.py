@@ -243,6 +243,10 @@ class ProfileToolCore(QWidget):
                                                                                  QtCore.Qt.EditRole)))
                 geoms.append(buffer)
                 geoms.append(multipoly)
+
+        if self.dockwidget.showModel:
+            DataReaderTool().simModelReaderTool(self.iface, self.dockwidget, self.pointstoDraw)
+
         self.toolrenderer.setBufferGeometry(geoms)
 
         # Update coordinates to use in plot (height, slope %...)
